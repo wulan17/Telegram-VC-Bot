@@ -86,8 +86,15 @@ const createConnection = async (chat: Chat.SupergroupChat): Promise<void> => {
     stream.on('finish', async () => {
         if (queue.length > 0) {
             const url = queue.shift()!;
-            const readable = await downloadSong(url);
-            stream.setReadable(readable);
+            try {
+                const readable = await downloadSong(url);
+                stream.setReadable(readable);
+            } catch(err) {
+                const { stream } = cache.get(chat.id)!;
+                stream.finish();
+                stream.emit('finish');
+                return true;
+            }
         }
     });
 };
